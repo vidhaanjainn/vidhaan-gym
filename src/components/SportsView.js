@@ -1,24 +1,22 @@
 import { SPORTS_ACTIVITIES } from "../data/workouts";
 import { getTodayStr, getWeekDates } from "../hooks/useStorage";
 
-export default function SportsView({ completedSports, onToggle }) {
-  const todayStr = getTodayStr();
-  const weekDates = getWeekDates();
+export default function SportsView({ allSports, onToggle, weekKey }) {
+  const todayStr  = getTodayStr();
+  const weekDates = getWeekDates(weekKey);
 
-  // Count per sport this week
   const weekCounts = {};
   SPORTS_ACTIVITIES.forEach(s => {
-    weekCounts[s.id] = weekDates.filter(d =>
-      completedSports[`${d}-${s.id}`]
-    ).length;
+    weekCounts[s.id] = weekDates.filter(d => (allSports[d] || {})[s.id]).length;
   });
 
-  // Group for weekly summary (swimming needs 2 sessions)
   const summaryItems = [
     { label: "🏓 Pickleball", ids: ["pickleball"], target: 1 },
     { label: "🏏 Cricket",    ids: ["cricket"],    target: 1 },
     { label: "🏊 Swimming",   ids: ["swim1","swim2"], target: 2 },
   ];
+
+  const todaySports = allSports[todayStr] || {};
 
   return (
     <div style={{ animation: "slideUp 0.3s ease" }}>
@@ -27,8 +25,7 @@ export default function SportsView({ completedSports, onToggle }) {
       </div>
 
       {SPORTS_ACTIVITIES.map(sport => {
-        const key = `${todayStr}-${sport.id}`;
-        const done = !!completedSports[key];
+        const done = !!todaySports[sport.id];
         return (
           <div key={sport.id} onClick={() => onToggle(sport.id)}
             style={{
@@ -65,7 +62,7 @@ export default function SportsView({ completedSports, onToggle }) {
         </div>
         {summaryItems.map(s => {
           const completed = s.ids.reduce((sum, id) => sum + (weekCounts[id] || 0), 0);
-          const capped = Math.min(completed, s.target);
+          const capped    = Math.min(completed, s.target);
           return (
             <div key={s.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
               <span style={{ fontSize: 14, color: "#9CA3AF" }}>{s.label}</span>
@@ -75,8 +72,7 @@ export default function SportsView({ completedSports, onToggle }) {
                     width: 24, height: 24, borderRadius: "50%",
                     background: i < capped ? "#10B981" : "#1e1e2e",
                     fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center",
-                    color: i < capped ? "#000" : "#374151",
-                    fontWeight: 700,
+                    color: i < capped ? "#000" : "#374151", fontWeight: 700,
                     transition: "background 0.3s",
                     boxShadow: i < capped ? "0 0 8px #10B98166" : "none",
                   }}>
@@ -89,7 +85,6 @@ export default function SportsView({ completedSports, onToggle }) {
         })}
       </div>
 
-      {/* Knee warning */}
       <div style={{ marginTop: 14, padding: "12px 16px", background: "#0f1923", borderRadius: 12, border: "1px solid #1e3a5f" }}>
         <div style={{ fontSize: 11, color: "#3B82F6", fontWeight: 700, marginBottom: 5 }}>⚠️ KNEE PROTOCOL</div>
         <div style={{ fontSize: 12, color: "#6B7280", lineHeight: 1.6 }}>

@@ -1,54 +1,34 @@
 import { useMemo } from "react";
 import { WORKOUT_PLAN } from "../data/workouts";
 
-export default function HistoryView({ completedDays, completedSports, history }) {
-  // Build last 365 days
-  const days = useMemo(() => {
-    const result = [];
-    for (let i = 364; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const str = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-      const hasWorkout = Object.keys(completedDays).some(k => k.startsWith(str));
-      const hasSport = Object.keys(completedSports).some(k => k.startsWith(str));
-      result.push({ str, hasWorkout, hasSport, month: d.getMonth(), dayOfWeek: d.getDay() });
-    }
-    return result;
-  }, [completedDays, completedSports]);
+export default function HistoryView({ history, allSports, getHistoryForRange }) {
+  const days = useMemo(() => getHistoryForRange(365).reverse(), [getHistoryForRange]);
 
-  // Count stats
-  const totalWorkouts = useMemo(() => {
-    const dates = new Set();
-    Object.keys(completedDays).forEach(k => {
-      const parts = k.split("-");
-      if (parts.length >= 3) dates.add(parts.slice(0, 3).join("-"));
-    });
-    return dates.size;
-  }, [completedDays]);
-
-  const totalSports = useMemo(() => {
-    const dates = new Set();
-    Object.keys(completedSports).filter(k => completedSports[k]).forEach(k => dates.add(k));
-    return dates.size;
-  }, [completedSports]);
+  const totalWorkouts = Object.keys(history).length;
 
   const thisMonthWorkouts = useMemo(() => {
-    const now = new Date();
-    const prefix = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+    const now    = new Date();
+    const prefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    return Object.keys(history).filter(k => k.startsWith(prefix)).length;
+  }, [history]);
+
+  const totalSportDays = useMemo(() => {
     const dates = new Set();
-    Object.keys(completedDays).forEach(k => {
-      if (k.startsWith(prefix)) dates.add(k.slice(0, 10));
+    Object.entries(allSports).forEach(([dateStr, sports]) => {
+      if (Object.values(sports).some(Boolean)) dates.add(dateStr);
     });
     return dates.size;
-  }, [completedDays]);
+  }, [allSports]);
 
-  // Group into weeks for the heatmap
+  // Build weeks for heatmap (Mon–Sun)
   const weeks = useMemo(() => {
     const result = [];
     let week = [];
-    // Pad start
-    const firstDay = days[0].dayOfWeek === 0 ? 6 : days[0].dayOfWeek - 1;
-    for (let i = 0; i < firstDay; i++) week.push(null);
+    const firstDow = days[0]
+      ? new Date(days[0].date + "T00:00:00").getDay()
+      : 1;
+    const padStart = firstDow === 0 ? 6 : firstDow - 1;
+    for (let i = 0; i < padStart; i++) week.push(null);
     days.forEach(d => {
       week.push(d);
       if (week.length === 7) { result.push(week); week = []; }
@@ -62,14 +42,18 @@ export default function HistoryView({ completedDays, completedSports, history })
 
   const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
+  const recentSessions = Object.entries(history)
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .slice(0, 14);
+
   return (
     <div style={{ animation: "slideUp 0.3s ease" }}>
-      {/* Stats row */}
+      {/* Stats */}
       <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
         {[
-          { label: "Total Gym Days", value: totalWorkouts, color: "#FF6B35" },
-          { label: "This Month",     value: thisMonthWorkouts, color: "#A78BFA" },
-          { label: "Sports / Swim",  value: totalSports,   color: "#10B981" },
+          { label: "Total Gym Days",  value: totalWorkouts,     color: "#FF6B35" },
+          { label: "This Month",      value: thisMonthWorkouts, color: "#A78BFA" },
+          { label: "Sports / Swim",   value: totalSportDays,    color: "#10B981" },
         ].map(s => (
           <div key={s.label} style={{
             flex: 1, background: "#111118",
@@ -92,36 +76,43 @@ export default function HistoryView({ completedDays, completedSports, history })
           365-Day Log
         </div>
         <div style={{ display: "flex", gap: 8, marginLeft: "auto", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <div style={{ width: 10, height: 10, borderRadius: 2, background: "#FF6B35" }} />
-            <span style={{ fontSize: 10, color: "#6B7280" }}>Gym</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <div style={{ width: 10, height: 10, borderRadius: 2, background: "#10B981" }} />
-            <span style={{ fontSize: 10, color: "#6B7280" }}>Sport</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <div style={{ width: 10, height: 10, borderRadius: 2, background: "#1e1e2e" }} />
-            <span style={{ fontSize: 10, color: "#6B7280" }}>Rest</span>
-          </div>
+          {[
+            { color: "#FF6B35", label: "Gym" },
+            { color: "#10B981", label: "Sport" },
+            { color: "#FF6B3555", label: "Partial" },
+            { color: "#1e1e2e", label: "Rest" },
+          ].map(l => (
+            <div key={l.label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 10, height: 10, borderRadius: 2, background: l.color }} />
+              <span style={{ fontSize: 10, color: "#6B7280" }}>{l.label}</span>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Heatmap grid */}
+      {/* Heatmap */}
       <div style={{ overflowX: "auto", paddingBottom: 8 }}>
         <div style={{ display: "flex", gap: 3, minWidth: "max-content" }}>
           {weeks.map((week, wi) => (
             <div key={wi} style={{ display: "flex", flexDirection: "column", gap: 3 }}>
               {week.map((day, di) => {
                 if (!day) return <div key={di} style={{ width: 10, height: 10 }} />;
-                const bg = day.hasWorkout ? "#FF6B35" : day.hasSport ? "#10B981" : "#161622";
-                const opacity = day.hasWorkout || day.hasSport ? 1 : 0.6;
+                const bg = day.hasGym
+                  ? "#FF6B35"
+                  : day.hasSport
+                  ? "#10B981"
+                  : "#161622";
                 return (
-                  <div key={di} style={{
-                    width: 10, height: 10, borderRadius: 2,
-                    background: bg, opacity,
-                    transition: "opacity 0.2s",
-                  }} title={day.str} />
+                  <div
+                    key={di}
+                    style={{
+                      width: 10, height: 10, borderRadius: 2,
+                      background: bg,
+                      opacity: day.hasGym || day.hasSport ? 1 : 0.5,
+                      transition: "opacity 0.2s",
+                    }}
+                    title={day.date}
+                  />
                 );
               })}
             </div>
@@ -129,50 +120,69 @@ export default function HistoryView({ completedDays, completedSports, history })
         </div>
       </div>
 
-      {/* Month labels below */}
+      {/* Month labels */}
       <div style={{ display: "flex", gap: 3, marginTop: 6, overflowX: "auto" }}>
         {weeks.map((week, wi) => {
           const firstDay = week.find(d => d !== null);
-          const showMonth = firstDay && firstDay.dayOfWeek === (new Date(firstDay.str + "T00:00:00").getDay() === 0 ? 0 : 1) && wi % 4 === 0;
           return (
             <div key={wi} style={{ width: 10, fontSize: 8, color: "#374151", whiteSpace: "nowrap", overflow: "visible" }}>
-              {firstDay && wi % 5 === 0 ? MONTH_NAMES[firstDay.month] : ""}
+              {firstDay && wi % 5 === 0 ? MONTH_NAMES[new Date(firstDay.date + "T00:00:00").getMonth()] : ""}
             </div>
           );
         })}
       </div>
 
-      {/* Recent workouts list */}
+      {/* Recent sessions */}
       <div style={{ marginTop: 24 }}>
         <div style={{ fontSize: 11, color: "#4B5563", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>
           Recent Sessions
         </div>
-        {Object.entries(history)
-          .sort((a, b) => b[0].localeCompare(a[0]))
-          .slice(0, 14)
-          .map(([dateStr, dayMap]) => (
+        {recentSessions.map(([dateStr, sessionData]) => {
+          const day  = WORKOUT_PLAN.find(p => p.id === sessionData.dayId);
+          const pct  = sessionData.pct || 0;
+          const rehabPct = sessionData.rehabPct;
+
+          return (
             <div key={dateStr} style={{
               background: "#111118", border: "1px solid #1e1e2e",
               borderRadius: 12, padding: "12px 14px", marginBottom: 8,
-              display: "flex", justifyContent: "space-between", alignItems: "center",
             }}>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "#e8e8f0" }}>
-                  {new Date(dateStr + "T00:00:00").toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#e8e8f0" }}>
+                    {new Date(dateStr + "T00:00:00").toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}
+                  </div>
+                  <div style={{ fontSize: 11, color: "#6B7280", marginTop: 3 }}>
+                    {day?.name || sessionData.dayId}
+                  </div>
                 </div>
-                <div style={{ fontSize: 11, color: "#6B7280", marginTop: 3 }}>
-                  {Object.keys(dayMap).map(dayId => {
-                    const d = WORKOUT_PLAN.find(p => p.id === dayId);
-                    return d ? d.name : dayId;
-                  }).join(", ")}
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: day?.color || "#FF6B35" }}>
+                    {pct}%
+                  </div>
+                  {rehabPct !== undefined && (
+                    <div style={{ fontSize: 10, color: rehabPct >= 80 ? "#4ade80" : "#f87171", marginTop: 2 }}>
+                      🩺 {rehabPct}%
+                    </div>
+                  )}
                 </div>
               </div>
-              <div style={{ fontSize: 20 }}>✅</div>
+
+              {/* Mini progress bar */}
+              <div style={{ marginTop: 8, height: 3, background: "#1a1a26", borderRadius: 2 }}>
+                <div style={{
+                  width: `${pct}%`, height: "100%",
+                  background: day?.color || "#FF6B35",
+                  borderRadius: 2,
+                }} />
+              </div>
             </div>
-          ))}
+          );
+        })}
+
         {Object.keys(history).length === 0 && (
           <div style={{ textAlign: "center", color: "#374151", fontSize: 14, padding: "30px 0" }}>
-            No sessions yet. Start today 💪
+            No sessions yet. Finish your first session to log it. 💪
           </div>
         )}
       </div>

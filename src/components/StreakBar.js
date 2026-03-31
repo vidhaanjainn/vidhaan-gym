@@ -3,16 +3,23 @@ import { WORKOUT_PLAN } from "../data/workouts";
 
 const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
 
-export function WeekBar({ completedDays, todayIndex }) {
-  const weekDates = getWeekDates();
+export function WeekBar({ weekKey, allSessions, allExercises }) {
+  const weekDates  = getWeekDates(weekKey);
+  const todayStr   = getTodayStr();
+  const todayIndex = weekDates.indexOf(todayStr);
+  const sessions   = allSessions[weekKey] || {};
 
   return (
     <div style={{ display: "flex", gap: 6, marginTop: 14 }}>
       {weekDates.map((dateStr, i) => {
-        const day = WORKOUT_PLAN[i];
-        const isToday = i === todayIndex;
-        // Check if any day was completed on this date
-        const isDone = Object.keys(completedDays).some(k => k.startsWith(dateStr));
+        const day         = WORKOUT_PLAN[i];
+        const isToday     = i === todayIndex;
+        const isFuture    = i > todayIndex && todayIndex !== -1;
+        const session     = sessions[`day${i + 1}`] || {};
+        const isDone      = session.state === "finished";
+        // Partial: any exercise checked
+        const dayExercises = ((allExercises[weekKey] || {})[`day${i + 1}`]) || {};
+        const hasAny      = Object.values(dayExercises).some(Boolean);
 
         return (
           <div key={dateStr} style={{ flex: 1, textAlign: "center" }}>
@@ -20,14 +27,16 @@ export function WeekBar({ completedDays, todayIndex }) {
               height: 5, borderRadius: 3,
               background: isDone
                 ? (day?.color || "#4ECDC4")
-                : isToday ? "#2a2a3a" : "#161622",
+                : hasAny ? `${day?.color || "#4ECDC4"}60`
+                : isToday ? "#2a2a3a"
+                : "#161622",
               border: isToday && !isDone ? `1px solid ${day?.color || "#4ECDC4"}60` : "none",
               transition: "background 0.4s",
               boxShadow: isDone ? `0 0 8px ${day?.color || "#4ECDC4"}55` : "none",
             }} />
             <div style={{
               fontSize: 10, marginTop: 5, fontWeight: isToday ? 700 : 400,
-              color: isToday ? (day?.color || "#4ECDC4") : "#374151",
+              color: isToday ? (day?.color || "#4ECDC4") : isFuture ? "#1e1e2e" : "#374151",
             }}>
               {DAY_LABELS[i]}
             </div>

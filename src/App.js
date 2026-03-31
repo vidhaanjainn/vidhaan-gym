@@ -1,10 +1,18 @@
 import { useState, useEffect } from "react";
 import { WORKOUT_PLAN, MOTIVATIONAL_MESSAGES } from "./data/workouts";
-import { useStorage, getTodayGymDayIndex, getWeekDates, getTodayStr } from "./hooks/useStorage";
+import {
+  useStorage,
+  getTodayGymDayIndex,
+  getWeekDates,
+  getTodayStr,
+  isSunday,
+  getWeekKey,
+} from "./hooks/useStorage";
 import DayView from "./components/DayView";
 import { WeekBar, StreakBadge } from "./components/StreakBar";
 import SportsView from "./components/SportsView";
 import HistoryView from "./components/HistoryView";
+import WeeklyReport from "./components/WeeklyReport";
 
 const TABS = [
   { id: "today",   label: "Today",   icon: "⚡" },
@@ -15,45 +23,72 @@ const TABS = [
 
 export default function App() {
   const {
-    loaded, completedExercises, completedDays, completedSports,
-    streakData, history, toggleExercise, toggleSport, getHistoryForRange,
+    loaded,
+    currentWeekKey,
+    getCompletedExercises,
+    toggleExercise,
+    getDayProgress,
+    saveLoad,
+    getLoad,
+    getWeekLoads,
+    getSession,
+    finishSession,
+    reopenSession,
+    saveComment,
+    getComment,
+    toggleSport,
+    getSportsForDate,
+    getWeeklySportCounts,
+    history,
+    streakData,
+    getHistoryForRange,
+    allSessions,
+    allExercises,
+    allSports,
   } = useStorage();
 
-  const [activeTab, setActiveTab]       = useState("today");
-  const [selectedDay, setSelectedDay]   = useState(null);
-  const [celebrate, setCelebrate]       = useState(false);
-  const [motivationIdx]                 = useState(() => Math.floor(Math.random() * MOTIVATIONAL_MESSAGES.length));
+  const [activeTab,    setActiveTab]    = useState("today");
+  const [selectedDay,  setSelectedDay]  = useState(null);
+  const [celebrate,    setCelebrate]    = useState(false);
+  const [showReport,   setShowReport]   = useState(false);
+  const [motivationIdx] = useState(() => Math.floor(Math.random() * MOTIVATIONAL_MESSAGES.length));
 
   const todayGymIndex = getTodayGymDayIndex();
   const todayWorkout  = WORKOUT_PLAN[todayGymIndex];
   const todayStr      = getTodayStr();
+  const weekDates     = getWeekDates(currentWeekKey);
 
-  // Watch for day completion → trigger celebration
+  // Celebrate on 100% completion of today
   useEffect(() => {
     if (!loaded) return;
     const allIds = todayWorkout.sections.flatMap(s => s.exercises.map(e => e.id));
-    const allDone = allIds.every(id => completedExercises[`${todayWorkout.id}-${id}`]);
-    if (allDone && allIds.length > 0) {
+    const completedEx = getCompletedExercises(currentWeekKey, todayWorkout.id);
+    const allDone = allIds.length > 0 && allIds.every(id => completedEx[id]);
+    if (allDone) {
       setCelebrate(true);
       const t = setTimeout(() => setCelebrate(false), 2800);
       return () => clearTimeout(t);
     }
-  }, [completedExercises, todayWorkout, loaded]);
+  }, [allExercises, todayWorkout, loaded, currentWeekKey, getCompletedExercises]);
 
-  const handleToggleExercise = (dayId, exerciseId, allIds) => {
-    toggleExercise(dayId, exerciseId, allIds);
+  // Show weekly report on Sundays if sessions this week > 0
+  useEffect(() => {
+    if (!loaded) return;
+    if (!isSunday()) return;
+    const sessions = allSessions[currentWeekKey] || {};
+    const hasAny = Object.values(sessions).some(s => s.state === "finished");
+    const dismissed = localStorage.getItem(`gym:report-dismissed-${currentWeekKey}`);
+    if (hasAny && !dismissed) setShowReport(true);
+  }, [loaded, allSessions, currentWeekKey]);
+
+  const dismissReport = () => {
+    localStorage.setItem(`gym:report-dismissed-${currentWeekKey}`, "1");
+    setShowReport(false);
   };
 
-  const getDayProgress = (dayId) => {
-    const day = WORKOUT_PLAN.find(d => d.id === dayId);
-    if (!day) return { done: 0, total: 0, pct: 0 };
-    const allIds = day.sections.flatMap(s => s.exercises.map(e => e.id));
-    const done = allIds.filter(id => completedExercises[`${dayId}-${id}`]).length;
-    return { done, total: allIds.length, pct: allIds.length > 0 ? Math.round((done / allIds.length) * 100) : 0 };
-  };
-
-  const weekDates = getWeekDates();
-  const weekWorkouts = weekDates.filter(d => Object.keys(completedDays).some(k => k.startsWith(d))).length;
+  // Sessions this week
+  const sessionsThisWeek = Object.values(allSessions[currentWeekKey] || {})
+    .filter(s => s.state === "finished").length;
 
   if (!loaded) {
     return (
@@ -63,6 +98,36 @@ export default function App() {
       </div>
     );
   }
+
+  // Helper: render DayView for a given workout day + date
+  const renderDayView = (day, onBack = null, dateStr = null) => {
+    const targetDate  = dateStr || todayStr;
+    const targetWeek  = getWeekKey(new Date(targetDate + "T00:00:00"));
+    const completedEx = getCompletedExercises(targetWeek, day.id);
+    const session     = getSession(targetWeek, day.id);
+    const comment     = getComment(targetDate);
+    const sportsForDate = getSportsForDate(targetDate);
+
+    return (
+      <DayView
+        day={day}
+        weekKey={targetWeek}
+        completedExercises={completedEx}
+        session={session}
+        onToggle={toggleExercise}
+        onFinishSession={finishSession}
+        onReopenSession={reopenSession}
+        onBack={onBack}
+        getLoad={getLoad}
+        saveLoad={saveLoad}
+        comment={comment}
+        onSaveComment={saveComment}
+        sportsForDate={sportsForDate}
+        onToggleSport={toggleSport}
+        dateStr={targetDate}
+      />
+    );
+  };
 
   return (
     <div style={{
@@ -77,13 +142,13 @@ export default function App() {
       overflow: "hidden",
       position: "relative",
     }}>
-
       <style>{`
         @keyframes slideUp   { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
         @keyframes pulse     { 0%,100% { transform:scale(1); } 50% { transform:scale(1.12); } }
         @keyframes celebrate { 0% { opacity:0; transform:scale(0.4) translateY(0); } 50% { opacity:1; transform:scale(1.2) translateY(-10px); } 100% { opacity:0; transform:scale(1.5) translateY(-40px); } }
         * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
         ::-webkit-scrollbar { display:none; }
+        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
       `}</style>
 
       {/* Celebrate overlay */}
@@ -100,6 +165,19 @@ export default function App() {
         </div>
       )}
 
+      {/* Weekly Report */}
+      {showReport && (
+        <WeeklyReport
+          weekKey={currentWeekKey}
+          allSessions={allSessions}
+          allSports={allSports}
+          history={history}
+          streakData={streakData}
+          allLoads={{}}
+          onDismiss={dismissReport}
+        />
+      )}
+
       {/* ── HEADER ── */}
       <div style={{ padding: "env(safe-area-inset-top, 16px) 20px 0", paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)", background: "linear-gradient(180deg,#0f0f18 0%,transparent 100%)", flexShrink: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -111,7 +189,14 @@ export default function App() {
               Vidhaan's Gym 💪
             </div>
             <div style={{ fontSize: 11, color: "#374151", marginTop: 3 }}>
-              {weekWorkouts}/7 days this week
+              {sessionsThisWeek}/6 sessions this week
+              {isSunday() && sessionsThisWeek > 0 && (
+                <span
+                  onClick={() => setShowReport(true)}
+                  style={{ marginLeft: 8, color: "#FF6B35", fontWeight: 700, cursor: "pointer" }}>
+                  View report →
+                </span>
+              )}
             </div>
           </div>
           <StreakBadge streakData={streakData} />
@@ -128,7 +213,11 @@ export default function App() {
         </div>
 
         {/* Week bar */}
-        <WeekBar completedDays={completedDays} todayIndex={todayGymIndex} />
+        <WeekBar
+          weekKey={currentWeekKey}
+          allSessions={allSessions}
+          allExercises={allExercises}
+        />
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 6, marginTop: 14, paddingBottom: 2 }}>
@@ -154,23 +243,22 @@ export default function App() {
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}>
 
         {/* TODAY */}
-        {activeTab === "today" && (
-          <DayView
-            day={todayWorkout}
-            completedExercises={completedExercises}
-            onToggle={handleToggleExercise}
-          />
-        )}
+        {activeTab === "today" && renderDayView(todayWorkout, null, todayStr)}
 
         {/* WEEK */}
         {activeTab === "week" && !selectedDay && (
           <div style={{ animation: "slideUp 0.3s ease" }}>
             <div style={{ fontSize: 12, color: "#4B5563", marginBottom: 14, fontWeight: 500 }}>
-              Tap any day to view and check off exercises
+              Tap any day to view and log exercises
             </div>
             {WORKOUT_PLAN.map((day, i) => {
-              const { done, total, pct } = getDayProgress(day.id);
-              const isToday = i === todayGymIndex;
+              const dateStr     = weekDates[i];
+              const allIds      = day.sections.flatMap(s => s.exercises.map(e => e.id));
+              const { done, total, pct } = getDayProgress(currentWeekKey, day.id, allIds);
+              const isToday     = i === todayGymIndex;
+              const session     = getSession(currentWeekKey, day.id);
+              const isFinished  = session.state === "finished";
+
               return (
                 <div key={day.id}
                   onClick={() => setSelectedDay(day.id)}
@@ -179,7 +267,6 @@ export default function App() {
                     border: `1px solid ${isToday ? day.color + "55" : "#1e1e2e"}`,
                     borderRadius: 16, padding: "15px 16px", marginBottom: 8,
                     cursor: "pointer", display: "flex", alignItems: "center", gap: 14,
-                    transition: "transform 0.15s",
                     boxShadow: isToday ? `0 0 20px ${day.color}18` : "none",
                   }}>
                   <div style={{ fontSize: 26 }}>{day.icon}</div>
@@ -187,11 +274,16 @@ export default function App() {
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{ fontSize: 14, fontWeight: 700, color: "#e8e8f0" }}>
-                          {day.label}: {day.name}
+                          {dateStr} · {day.name}
                         </span>
                         {isToday && (
                           <span style={{ fontSize: 9, background: day.color, color: "#000", padding: "2px 6px", borderRadius: 20, fontWeight: 800, letterSpacing: 0.5 }}>
                             TODAY
+                          </span>
+                        )}
+                        {isFinished && (
+                          <span style={{ fontSize: 9, background: "#4ade8022", color: "#4ade80", padding: "2px 6px", borderRadius: 20, fontWeight: 800 }}>
+                            DONE ✓
                           </span>
                         )}
                       </div>
@@ -209,26 +301,31 @@ export default function App() {
           </div>
         )}
 
-        {activeTab === "week" && selectedDay && (
-          <DayView
-            day={WORKOUT_PLAN.find(d => d.id === selectedDay)}
-            completedExercises={completedExercises}
-            onToggle={handleToggleExercise}
-            onBack={() => setSelectedDay(null)}
-          />
-        )}
+        {activeTab === "week" && selectedDay && (() => {
+          const dayIndex = WORKOUT_PLAN.findIndex(d => d.id === selectedDay);
+          const dateStr  = weekDates[dayIndex] || todayStr;
+          return renderDayView(
+            WORKOUT_PLAN.find(d => d.id === selectedDay),
+            () => setSelectedDay(null),
+            dateStr,
+          );
+        })()}
 
         {/* SPORTS */}
         {activeTab === "sports" && (
-          <SportsView completedSports={completedSports} onToggle={toggleSport} />
+          <SportsView
+            allSports={allSports}
+            onToggle={toggleSport}
+            weekKey={currentWeekKey}
+          />
         )}
 
         {/* HISTORY */}
         {activeTab === "history" && (
           <HistoryView
-            completedDays={completedDays}
-            completedSports={completedSports}
             history={history}
+            allSports={allSports}
+            getHistoryForRange={getHistoryForRange}
           />
         )}
       </div>
