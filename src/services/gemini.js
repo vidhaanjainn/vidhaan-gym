@@ -3,7 +3,7 @@
 // Model: gemini-2.0-flash (free tier, 1500 req/day)
 // ============================================================
 
-const GEMINI_API_KEY = "AIzaSyCNKObMtue7rmk7-njdzJV1Xo8OCg03a1E";
+const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 async function callGemini(prompt) {
