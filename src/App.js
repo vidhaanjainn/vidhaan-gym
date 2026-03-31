@@ -186,7 +186,7 @@ export default function App() {
               {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
             </div>
             <div style={{ fontSize: 24, fontWeight: 800, marginTop: 4, fontFamily: "'Syne', sans-serif", letterSpacing: -0.5, color: "#f0f0f5" }}>
-              Vidhaan's Gym 💪
+              Vidhaan Moves 🏃
             </div>
             <div style={{ fontSize: 11, color: "#374151", marginTop: 3 }}>
               {sessionsThisWeek}/6 sessions this week
@@ -207,7 +207,7 @@ export default function App() {
           marginTop: 14, padding: "9px 13px",
           background: `linear-gradient(135deg, ${todayWorkout.color}12, ${todayWorkout.color}05)`,
           borderRadius: 10, borderLeft: `3px solid ${todayWorkout.color}80`,
-          fontSize: 12, color: "#6B7280", fontStyle: "italic",
+          fontSize: 12, color: "#9CA3AF", fontStyle: "italic", fontWeight: 500,
         }}>
           "{MOTIVATIONAL_MESSAGES[motivationIdx]}"
         </div>
@@ -274,7 +274,7 @@ export default function App() {
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{ fontSize: 14, fontWeight: 700, color: "#e8e8f0" }}>
-                          {dateStr} · {day.name}
+                          {dateStr ? new Date(dateStr + "T00:00:00").toLocaleDateString("en-IN", { weekday: "short" }) : day.name.split(" ")[0]} · {day.name}
                         </span>
                         {isToday && (
                           <span style={{ fontSize: 9, background: day.color, color: "#000", padding: "2px 6px", borderRadius: 20, fontWeight: 800, letterSpacing: 0.5 }}>
@@ -287,9 +287,9 @@ export default function App() {
                           </span>
                         )}
                       </div>
-                      <span style={{ fontSize: 11, color: "#4B5563" }}>{done}/{total}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "#9CA3AF" }}>{done}/{total}</span>
                     </div>
-                    <div style={{ fontSize: 11, color: "#4B5563", marginTop: 2 }}>{day.focus}</div>
+                    <div style={{ fontSize: 11, color: "#4B5563", marginTop: 2 }}><span style={{ color: day.color, marginRight: 5 }}>●</span>{day.focus}</div>
                     <div style={{ marginTop: 8, height: 3, background: "#1a1a26", borderRadius: 2 }}>
                       <div style={{ width: `${pct}%`, height: "100%", background: day.color, borderRadius: 2, transition: "width 0.5s ease" }} />
                     </div>

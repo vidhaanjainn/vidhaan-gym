@@ -4,8 +4,7 @@ import { getTodayStr } from "../hooks/useStorage";
 import { getSessionInsight } from "../services/gemini";
 
 // ── Load Tracker inline component ────────────────────────────
-function LoadRow({ ex, dayColor, weekKey, dayId, currentLoad, previousLoad, onSave }) {
-  const [open, setOpen] = useState(false);
+function LoadRow({ ex, dayColor, weekKey, dayId, currentLoad, previousLoad, onSave, open, onToggle }) {
   const [weight, setWeight] = useState(currentLoad?.weight || "");
   const [reps,   setReps]   = useState(currentLoad?.reps   || "");
   const [sets,   setSets]   = useState(currentLoad?.sets   || ex.sets);
@@ -15,83 +14,57 @@ function LoadRow({ ex, dayColor, weekKey, dayId, currentLoad, previousLoad, onSa
     : null;
 
   const handleSave = () => {
-    if (!weight) { setOpen(false); return; }
+    if (!weight) { onToggle(); return; }
     onSave(weekKey, dayId, ex.id, { weight: parseFloat(weight), reps: parseInt(reps) || ex.reps, sets: parseInt(sets) || ex.sets });
-    setOpen(false);
+    onToggle();
   };
 
+  if (!open) return null;
+
   return (
-    <div style={{ marginTop: 6 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <button
-          onClick={(e) => { e.stopPropagation(); setOpen(o => !o); }}
-          style={{
-            background: currentLoad ? `${dayColor}22` : "#1a1a26",
-            border: `1px solid ${currentLoad ? dayColor + "60" : "#2d2d40"}`,
-            borderRadius: 8, padding: "3px 10px",
-            fontSize: 11, color: currentLoad ? dayColor : "#4B5563",
-            cursor: "pointer", fontFamily: "inherit", fontWeight: 600,
-          }}>
-          {currentLoad ? `${currentLoad.weight}kg × ${currentLoad.reps}` : "+ Log load"}
-        </button>
-
-        {hasChange !== null && (
-          <span style={{
-            fontSize: 10, fontWeight: 700,
-            color: hasChange > 0 ? "#4ade80" : hasChange < 0 ? "#f87171" : "#6B7280",
-          }}>
-            {hasChange > 0 ? "↑" : hasChange < 0 ? "↓" : "→"} {Math.abs(hasChange)}% vs last week
-          </span>
-        )}
-
-        {!currentLoad && previousLoad && (
-          <span style={{ fontSize: 10, color: "#374151" }}>
-            Last week: {previousLoad.weight}kg × {previousLoad.reps}
-          </span>
-        )}
-      </div>
-
-      {open && (
-        <div
-          onClick={e => e.stopPropagation()}
-          style={{
-            marginTop: 8, background: "#111118",
-            border: "1px solid #2d2d40", borderRadius: 10,
-            padding: "12px", display: "flex", gap: 8, alignItems: "flex-end",
-          }}>
-          {[
-            { label: "Weight (kg)", val: weight, set: setWeight, type: "number", placeholder: previousLoad?.weight || "0" },
-            { label: "Reps",        val: reps,   set: setReps,   type: "number", placeholder: previousLoad?.reps || ex.reps },
-            { label: "Sets",        val: sets,   set: setSets,   type: "number", placeholder: ex.sets },
-          ].map(f => (
-            <div key={f.label} style={{ flex: 1 }}>
-              <div style={{ fontSize: 9, color: "#4B5563", marginBottom: 4, fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase" }}>{f.label}</div>
-              <input
-                type={f.type}
-                value={f.val}
-                placeholder={String(f.placeholder)}
-                onChange={e => f.set(e.target.value)}
-                style={{
-                  width: "100%", background: "#0a0a0f",
-                  border: "1px solid #2d2d40", borderRadius: 6,
-                  padding: "6px 8px", color: "#f0f0f5",
-                  fontSize: 14, fontFamily: "inherit", outline: "none",
-                }}
-              />
-            </div>
-          ))}
-          <button
-            onClick={handleSave}
+    <div
+      onClick={e => e.stopPropagation()}
+      style={{
+        margin: "6px 14px 10px 53px", background: "#111118",
+        border: "1px solid #2d2d40", borderRadius: 10,
+        padding: "10px 12px", display: "flex", gap: 8, alignItems: "flex-end",
+      }}>
+      {[
+        { label: "kg", val: weight, set: setWeight, placeholder: previousLoad?.weight || "0" },
+        { label: "reps", val: reps, set: setReps, placeholder: previousLoad?.reps || ex.reps },
+        { label: "sets", val: sets, set: setSets, placeholder: ex.sets },
+      ].map(f => (
+        <div key={f.label} style={{ flex: 1 }}>
+          <div style={{ fontSize: 9, color: "#4B5563", marginBottom: 3, fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase" }}>{f.label}</div>
+          <input
+            type="number"
+            value={f.val}
+            placeholder={String(f.placeholder)}
+            onChange={e => f.set(e.target.value)}
             style={{
-              background: dayColor, border: "none", borderRadius: 8,
-              padding: "7px 14px", color: "#000",
-              fontSize: 12, fontWeight: 800, cursor: "pointer",
-              fontFamily: "inherit", whiteSpace: "nowrap",
-            }}>
-            Save
-          </button>
+              width: "100%", background: "#0a0a0f",
+              border: "1px solid #2d2d40", borderRadius: 6,
+              padding: "5px 7px", color: "#f0f0f5",
+              fontSize: 14, fontFamily: "inherit", outline: "none", boxSizing: "border-box",
+            }}
+          />
+        </div>
+      ))}
+      {hasChange !== null && (
+        <div style={{ fontSize: 10, fontWeight: 700, color: hasChange > 0 ? "#4ade80" : hasChange < 0 ? "#f87171" : "#6B7280", alignSelf: "center", whiteSpace: "nowrap" }}>
+          {hasChange > 0 ? "↑" : hasChange < 0 ? "↓" : "→"}{Math.abs(hasChange)}%
         </div>
       )}
+      <button
+        onClick={handleSave}
+        style={{
+          background: dayColor, border: "none", borderRadius: 8,
+          padding: "6px 12px", color: "#000",
+          fontSize: 12, fontWeight: 800, cursor: "pointer",
+          fontFamily: "inherit", whiteSpace: "nowrap", flexShrink: 0,
+        }}>
+        Save
+      </button>
     </div>
   );
 }
@@ -99,6 +72,7 @@ function LoadRow({ ex, dayColor, weekKey, dayId, currentLoad, previousLoad, onSa
 // ── Exercise Row ──────────────────────────────────────────────
 function ExerciseRow({ ex, isDone, dayColor, isLast, onToggle, weekKey, dayId, currentLoad, previousLoad, onSaveLoad, isFinished }) {
   const [pressed, setPressed] = useState(false);
+  const [loadOpen, setLoadOpen] = useState(false);
 
   return (
     <div style={{
@@ -139,13 +113,31 @@ function ExerciseRow({ ex, isDone, dayColor, isLast, onToggle, weekKey, dayId, c
             }}>
               {ex.name}
             </div>
-            <div style={{
-              fontSize: 11, fontWeight: 700, whiteSpace: "nowrap",
-              color: isDone ? "#374151" : dayColor,
-              background: `${dayColor}18`,
-              padding: "3px 9px", borderRadius: 8, flexShrink: 0,
-            }}>
-              {ex.sets}×{ex.reps}
+            <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
+              <div style={{
+                fontSize: 11, fontWeight: 700, whiteSpace: "nowrap",
+                color: isDone ? "#374151" : dayColor,
+                background: `${dayColor}18`,
+                padding: "3px 9px", borderRadius: 8,
+              }}>
+                {currentLoad ? `${currentLoad.weight}kg` : `${ex.sets}×${ex.reps}`}
+              </div>
+              {!ex.isRehab && (
+                <div
+                  onClick={e => { e.stopPropagation(); setLoadOpen(o => !o); }}
+                  style={{
+                    width: 20, height: 20, borderRadius: "50%",
+                    border: `1.5px solid ${loadOpen ? dayColor : "#2d2d40"}`,
+                    background: loadOpen ? `${dayColor}22` : "transparent",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 13, fontWeight: 700,
+                    color: loadOpen ? dayColor : "#374151",
+                    cursor: "pointer", flexShrink: 0, lineHeight: 1,
+                    transition: "all 0.15s",
+                  }}>
+                  {loadOpen ? "×" : "+"}
+                </div>
+              )}
             </div>
           </div>
           {ex.note && (
@@ -156,21 +148,19 @@ function ExerciseRow({ ex, isDone, dayColor, isLast, onToggle, weekKey, dayId, c
         </div>
       </div>
 
-      {/* Load tracker — shown below the row, not inside the toggle area */}
+      {/* Load tracker — expands inline, zero height when closed */}
       {!ex.isRehab && (
-        <div
-          onClick={e => e.stopPropagation()}
-          style={{ padding: "0 14px 12px 53px" }}>
-          <LoadRow
-            ex={ex}
-            dayColor={dayColor}
-            weekKey={weekKey}
-            dayId={dayId}
-            currentLoad={currentLoad}
-            previousLoad={previousLoad}
-            onSave={onSaveLoad}
-          />
-        </div>
+        <LoadRow
+          ex={ex}
+          dayColor={dayColor}
+          weekKey={weekKey}
+          dayId={dayId}
+          currentLoad={currentLoad}
+          previousLoad={previousLoad}
+          onSave={onSaveLoad}
+          open={loadOpen}
+          onToggle={() => setLoadOpen(o => !o)}
+        />
       )}
     </div>
   );
