@@ -315,9 +315,9 @@ export default function App() {
 
             {orderedPlan.map((day, i) => {
               const allIds      = day.sections.flatMap(s => s.exercises.map(e => e.id));
-              const dateStr     = weekDates[weekOrder ? WORKOUT_PLAN.findIndex(d => d.id === day.id) : i];
+              const dateStr     = weekDates[i];
               const { done, total, pct } = getDayProgress(currentWeekKey, day.id, allIds);
-              const isToday     = day.id === WORKOUT_PLAN[todayGymIndex]?.id;
+              const isToday     = i === todayGymIndex;
               const session     = getSession(currentWeekKey, day.id);
               const isFinished  = session.state === "finished";
               const isHome      = getHomeMode(currentWeekKey, day.id);
