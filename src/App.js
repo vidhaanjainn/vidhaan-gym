@@ -7,6 +7,11 @@ import {
   getTodayStr,
   isSunday,
   getWeekKey,
+  getWeekOrder,
+  saveWeekOrder,
+  resetWeekOrder,
+  getHomeMode,
+  setHomeMode,
 } from "./hooks/useStorage";
 import DayView from "./components/DayView";
 import { WeekBar, StreakBadge } from "./components/StreakBar";
@@ -52,6 +57,9 @@ export default function App() {
   const [celebrate,    setCelebrate]    = useState(false);
   const [showReport,   setShowReport]   = useState(false);
   const [motivationIdx] = useState(() => Math.floor(Math.random() * MOTIVATIONAL_MESSAGES.length));
+  const [weekOrder,    setWeekOrder]    = useState(null);
+  const [reorderMode,  setReorderMode]  = useState(false);
+  const [dragIdx,      setDragIdx]      = useState(null);
 
   const todayGymIndex = getTodayGymDayIndex();
   const todayWorkout  = WORKOUT_PLAN[todayGymIndex];
@@ -86,6 +94,16 @@ export default function App() {
     setShowReport(false);
   };
 
+  // Load week order on mount / week change
+  useEffect(() => {
+    setWeekOrder(getWeekOrder(currentWeekKey));
+  }, [currentWeekKey]);
+
+  // Ordered plan for current week
+  const orderedPlan = weekOrder
+    ? weekOrder.map(id => WORKOUT_PLAN.find(d => d.id === id)).filter(Boolean)
+    : WORKOUT_PLAN;
+
   // Sessions this week
   const sessionsThisWeek = Object.values(allSessions[currentWeekKey] || {})
     .filter(s => s.state === "finished").length;
@@ -107,6 +125,7 @@ export default function App() {
     const session     = getSession(targetWeek, day.id);
     const comment     = getComment(targetDate);
     const sportsForDate = getSportsForDate(targetDate);
+    const isHome      = getHomeMode(targetWeek, day.id);
 
     return (
       <DayView
@@ -125,6 +144,10 @@ export default function App() {
         sportsForDate={sportsForDate}
         onToggleSport={toggleSport}
         dateStr={targetDate}
+        isHome={isHome}
+        onToggleHome={(val) => {
+          setHomeMode(targetWeek, day.id, val);
+        }}
       />
     );
   };
@@ -248,31 +271,82 @@ export default function App() {
         {/* WEEK */}
         {activeTab === "week" && !selectedDay && (
           <div style={{ animation: "slideUp 0.3s ease" }}>
-            <div style={{ fontSize: 12, color: "#4B5563", marginBottom: 14, fontWeight: 500 }}>
-              Tap any day to view and log exercises
+            {/* Header row */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <div style={{ fontSize: 12, color: "#4B5563", fontWeight: 500 }}>
+                {reorderMode ? "Drag to reorder — tap ✓ when done" : "Tap any day to view and log exercises"}
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                {weekOrder && !reorderMode && (
+                  <button
+                    onClick={() => { resetWeekOrder(currentWeekKey); setWeekOrder(null); }}
+                    style={{ background: "transparent", border: "1px solid #2d2d40", borderRadius: 8, padding: "4px 10px", fontSize: 11, color: "#6B7280", cursor: "pointer", fontFamily: "inherit" }}>
+                    Reset
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    if (reorderMode) {
+                      saveWeekOrder(currentWeekKey, orderedPlan.map(d => d.id));
+                      setWeekOrder(orderedPlan.map(d => d.id));
+                    }
+                    setReorderMode(o => !o);
+                    setDragIdx(null);
+                  }}
+                  style={{
+                    background: reorderMode ? "#4ade8022" : "#111118",
+                    border: `1px solid ${reorderMode ? "#4ade80" : "#2d2d40"}`,
+                    borderRadius: 8, padding: "4px 12px",
+                    fontSize: 11, fontWeight: 700,
+                    color: reorderMode ? "#4ade80" : "#9CA3AF",
+                    cursor: "pointer", fontFamily: "inherit",
+                  }}>
+                  {reorderMode ? "✓ Done" : "⇅ Swap Days"}
+                </button>
+              </div>
             </div>
-            {WORKOUT_PLAN.map((day, i) => {
-              const dateStr     = weekDates[i];
+
+            {orderedPlan.map((day, i) => {
               const allIds      = day.sections.flatMap(s => s.exercises.map(e => e.id));
+              const dateStr     = weekDates[weekOrder ? WORKOUT_PLAN.findIndex(d => d.id === day.id) : i];
               const { done, total, pct } = getDayProgress(currentWeekKey, day.id, allIds);
-              const isToday     = i === todayGymIndex;
+              const isToday     = day.id === WORKOUT_PLAN[todayGymIndex]?.id;
               const session     = getSession(currentWeekKey, day.id);
               const isFinished  = session.state === "finished";
+              const isHome      = getHomeMode(currentWeekKey, day.id);
 
               return (
-                <div key={day.id}
-                  onClick={() => setSelectedDay(day.id)}
+                <div
+                  key={day.id}
+                  draggable={reorderMode}
+                  onDragStart={() => setDragIdx(i)}
+                  onDragOver={e => { e.preventDefault(); }}
+                  onDrop={() => {
+                    if (dragIdx === null || dragIdx === i) return;
+                    const next = [...orderedPlan];
+                    const [moved] = next.splice(dragIdx, 1);
+                    next.splice(i, 0, moved);
+                    setWeekOrder(next.map(d => d.id));
+                    setDragIdx(null);
+                  }}
+                  onClick={() => !reorderMode && setSelectedDay(day.id)}
                   style={{
                     background: isToday ? `linear-gradient(135deg, ${day.color}18, ${day.color}06)` : "#111118",
-                    border: `1px solid ${isToday ? day.color + "55" : "#1e1e2e"}`,
+                    border: `1px solid ${dragIdx === i ? day.color : isToday ? day.color + "55" : "#1e1e2e"}`,
                     borderRadius: 16, padding: "15px 16px", marginBottom: 8,
-                    cursor: "pointer", display: "flex", alignItems: "center", gap: 14,
+                    cursor: reorderMode ? "grab" : "pointer",
+                    display: "flex", alignItems: "center", gap: 14,
                     boxShadow: isToday ? `0 0 20px ${day.color}18` : "none",
+                    opacity: dragIdx === i ? 0.5 : 1,
+                    transition: "opacity 0.15s",
                   }}>
+                  {reorderMode && (
+                    <div style={{ fontSize: 18, color: "#374151", flexShrink: 0 }}>⠿</div>
+                  )}
                   <div style={{ fontSize: 26 }}>{day.icon}</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                         <span style={{ fontSize: 14, fontWeight: 700, color: "#e8e8f0" }}>
                           {dateStr ? new Date(dateStr + "T00:00:00").toLocaleDateString("en-IN", { weekday: "short" }) : day.name.split(" ")[0]} · {day.name}
                         </span>
@@ -286,6 +360,11 @@ export default function App() {
                             DONE ✓
                           </span>
                         )}
+                        {isHome && (
+                          <span style={{ fontSize: 9, background: "#3B82F622", color: "#60A5FA", padding: "2px 6px", borderRadius: 20, fontWeight: 800 }}>
+                            🏠 HOME
+                          </span>
+                        )}
                       </div>
                       <span style={{ fontSize: 12, fontWeight: 700, color: "#9CA3AF" }}>{done}/{total}</span>
                     </div>
@@ -294,7 +373,7 @@ export default function App() {
                       <div style={{ width: `${pct}%`, height: "100%", background: day.color, borderRadius: 2, transition: "width 0.5s ease" }} />
                     </div>
                   </div>
-                  <div style={{ color: "#2d2d40", fontSize: 18, fontWeight: 700 }}>›</div>
+                  {!reorderMode && <div style={{ color: "#2d2d40", fontSize: 18, fontWeight: 700 }}>›</div>}
                 </div>
               );
             })}

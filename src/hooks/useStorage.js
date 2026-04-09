@@ -366,3 +366,41 @@ export function useStorage() {
     allSports,
   };
 }
+
+// ── Week Day Order ────────────────────────────────────────────
+// Returns ordered array of dayIds for a given weekKey
+// Default: ["day1","day2","day3","day4","day5","day6","day7"]
+export function getWeekOrder(weekKey) {
+  try {
+    const raw = localStorage.getItem(`gym:week-order-${weekKey}`);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+export function saveWeekOrder(weekKey, order) {
+  try {
+    localStorage.setItem(`gym:week-order-${weekKey}`, JSON.stringify(order));
+  } catch (e) { console.warn("Week order save failed:", e); }
+}
+
+export function resetWeekOrder(weekKey) {
+  localStorage.removeItem(`gym:week-order-${weekKey}`);
+}
+
+// ── Home Mode ─────────────────────────────────────────────────
+export function getHomeMode(weekKey, dayId) {
+  try {
+    const raw = localStorage.getItem(`gym:home-${weekKey}-${dayId}`);
+    return raw === "1";
+  } catch { return false; }
+}
+
+export function setHomeMode(weekKey, dayId, isHome) {
+  try {
+    if (isHome) {
+      localStorage.setItem(`gym:home-${weekKey}-${dayId}`, "1");
+    } else {
+      localStorage.removeItem(`gym:home-${weekKey}-${dayId}`);
+    }
+  } catch (e) { console.warn("Home mode save failed:", e); }
+}

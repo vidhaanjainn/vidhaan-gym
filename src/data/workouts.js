@@ -1,10 +1,5 @@
 // ============================================================
 // WORKOUT_PLAN — EDIT YOUR EXERCISES HERE
-//
-// Each exercise can have:
-//   importance: string  — why this exercise matters (shown in missed breakdown)
-//   isRehab: true       — shows green 🩺 badge
-//   canSwap: ["id1","id2"] — allowed swap alternatives (future)
 // ============================================================
 
 export const WORKOUT_PLAN = [
@@ -26,6 +21,7 @@ export const WORKOUT_PLAN = [
           { id: "d1s3", name: "Overhead Machine Shoulder Press", sets: 3, reps: "8–10",  note: "", importance: "Overhead pressing builds the anterior and medial delt. Skipping this kills shoulder width over time." },
           { id: "d1s4", name: "Dumbbell Lateral Raises",         sets: 3, reps: "12–15", note: "", importance: "Lateral delts are what create the wide shoulder look. Nothing else trains this angle." },
           { id: "d1s5", name: "Tricep Rope Pushdowns",           sets: 3, reps: "12–15", note: "", importance: "Triceps are 2/3 of arm size. Rope hits the long head through full extension." },
+          { id: "d1s6", name: "Skull Crushers (EZ Bar)",         sets: 3, reps: "10–12", note: "Control the descent. Elbows stay fixed.", importance: "Hits the long head of the tricep under a deep stretch — the most growth-productive portion of the movement. Pairs with pushdowns to hit the tricep from both ends." },
         ],
       },
       {
@@ -49,13 +45,21 @@ export const WORKOUT_PLAN = [
         ],
       },
     ],
+    homeAlternatives: [
+      { id: "d1h1", name: "Push-Ups (Slow Tempo)",           sets: 4, reps: "15–20",  note: "3 sec down, 1 sec up. Full range.", importance: "Chest and tricep stimulus without any equipment. Slow tempo increases time under tension." },
+      { id: "d1h2", name: "Pike Push-Ups",                   sets: 3, reps: "12–15",  note: "Hips high, head towards floor.",    importance: "Shoulder-dominant push-up variant. Closest home substitute for overhead press." },
+      { id: "d1h3", name: "Diamond Push-Ups",                sets: 3, reps: "12–15",  note: "Hands close, elbows tight.",        importance: "Tricep-dominant push-up. Direct substitute for pushdowns and skull crushers at home." },
+      { id: "d1h4", name: "Resistance Band Lateral Raises",  sets: 3, reps: "15–20",  note: "Band under feet.",                  importance: "Lateral delt isolation with band — same muscle, same angle as dumbbell version." },
+      { id: "d1h5", name: "Resistance Band Overhead Press",  sets: 3, reps: "12–15",  note: "Stand on band, press overhead.",    importance: "Full shoulder press pattern with band resistance. Hits all three delt heads." },
+      { id: "d1h6", name: "Clamshells + Hip Flexor Stretch", sets: 3, reps: "15/side + 45s", note: "Rehab still applies at home.", isRehab: true, importance: "Rehab doesn't take a rest day. Bands travel — no excuse to skip this." },
+    ],
   },
 
   {
     id: "day2",
     label: "Day 2",
     name: "Pull",
-    focus: "Back · Biceps",
+    focus: "Back · Biceps · Traps",
     color: "#4ECDC4",
     icon: "🔙",
     type: "strength",
@@ -67,8 +71,10 @@ export const WORKOUT_PLAN = [
           { id: "d2s1", name: "Lat Pulldowns",         sets: 4, reps: "8–10",  note: "", importance: "Primary lat builder. Width comes from here. Skipping this is the single biggest reason people have flat backs." },
           { id: "d2s2", name: "Seated Cable Rows",     sets: 4, reps: "10–12", note: "", importance: "Mid-back thickness. Rhomboids and mid traps — the muscles that stop you looking hunched." },
           { id: "d2s3", name: "Face Pulls",            sets: 3, reps: "12–15", note: "", importance: "Rear delt and external rotator health. Your shoulder joint longevity depends on this. Non-negotiable for anyone pressing heavy." },
-          { id: "d2s4", name: "Dumbbell Hammer Curls", sets: 3, reps: "12–15", note: "", importance: "Brachialis and brachioradialis — these give arms that thick, full look from all angles, not just the classic bicep peak." },
-          { id: "d2s5", name: "Cable Rear Delt Flys",  sets: 3, reps: "12–15", note: "", importance: "Rear delts balance the front delt dominant push work. Neglect this and your posture and shoulder health both suffer." },
+          { id: "d2s4", name: "Dumbbell Shrugs",       sets: 3, reps: "12–15", note: "Hold at top for 1 sec. Don't roll shoulders.", importance: "Upper traps are completely untrained in this plan without shrugs. Traps tie the back together visually and functionally — they stabilise the scapula on every pull." },
+          { id: "d2s5", name: "Dumbbell Hammer Curls", sets: 3, reps: "12–15", note: "", importance: "Brachialis and brachioradialis — these give arms that thick, full look from all angles, not just the classic bicep peak." },
+          { id: "d2s6", name: "EZ Bar Curls",          sets: 3, reps: "10–12", note: "Full stretch at bottom, squeeze at top.", importance: "Standard bicep curl with EZ bar reduces wrist strain versus straight bar. Hits the bicep peak directly. One curl exercise alone on pull day wasn't enough volume for the muscle to grow." },
+          { id: "d2s7", name: "Cable Rear Delt Flys",  sets: 3, reps: "12–15", note: "", importance: "Rear delts balance the front delt dominant push work. Neglect this and your posture and shoulder health both suffer." },
         ],
       },
       {
@@ -82,7 +88,8 @@ export const WORKOUT_PLAN = [
       {
         title: "Core",
         exercises: [
-          { id: "d2c1", name: "Bird Dogs", sets: 3, reps: "10/side", note: "", importance: "Anti-rotation and contralateral stability. Trains the pattern your spine uses during every compound movement." },
+          { id: "d2c1", name: "Ab Wheel Rollouts", sets: 3, reps: "10–12", note: "Kneel to start. Back flat, don't sag.", importance: "The hardest anti-extension core exercise in the plan. Builds deep abdominal wall strength that protects the spine under load. Placed here when you're fresh enough to do it properly." },
+          { id: "d2c2", name: "Bird Dogs",         sets: 3, reps: "10/side", note: "", importance: "Anti-rotation and contralateral stability. Trains the pattern your spine uses during every compound movement." },
         ],
       },
       {
@@ -91,6 +98,14 @@ export const WORKOUT_PLAN = [
           { id: "d2cd1", name: "Incline Treadmill Walk / Rowing", sets: 1, reps: "30 min", note: "HR 110–130 bpm.", importance: "Rowing is zero knee impact with full body aerobic stimulus. Incline walk builds posterior chain endurance." },
         ],
       },
+    ],
+    homeAlternatives: [
+      { id: "d2h1", name: "Resistance Band Rows (Door Anchor)", sets: 4, reps: "12–15", note: "Anchor band at chest height, pull to waist.", importance: "Horizontal pull pattern at home. Hits rhomboids and mid-back same as cable rows." },
+      { id: "d2h2", name: "Resistance Band Lat Pulldown",       sets: 3, reps: "12–15", note: "Anchor overhead, pull to chin.",             importance: "Vertical pull with band. Not as loaded as machine but maintains the motor pattern." },
+      { id: "d2h3", name: "Resistance Band Face Pulls",         sets: 3, reps: "15–20", note: "Door anchor at face height.",                importance: "Rear delt and external rotators — band works perfectly here. Same movement, same muscles." },
+      { id: "d2h4", name: "Resistance Band Hammer Curls",       sets: 3, reps: "15–20", note: "Stand on band.",                            importance: "Brachialis hit at home. Band tension increases through the curl — actually a solid stimulus." },
+      { id: "d2h5", name: "Resistance Band Bicep Curls",        sets: 3, reps: "15–20", note: "Supinate at top.",                          importance: "Standard curl pattern with band. Keeps bicep frequency up on rest days from gym." },
+      { id: "d2h6", name: "Dumbbell Shrugs (Kettlebell)",       sets: 3, reps: "12–15", note: "Hold at top 1 sec.",                        importance: "Kettlebell shrug is identical to dumbbell. Traps don't need a gym." },
     ],
   },
 
@@ -117,10 +132,11 @@ export const WORKOUT_PLAN = [
         title: "Strength",
         exercises: [
           { id: "d3s1", name: "Leg Press",                                  sets: 4, reps: "10–12", note: "Feet shoulder-width, mid-platform. Stop at 90°.", importance: "Primary quad and glute builder with controllable knee angle. Your safest heavy lower body compound right now." },
-          { id: "d3s2", name: "Reverse Lunges (knee-safe swap)",            sets: 3, reps: "10/leg", note: "⚠️ Step BACK not forward. Controlled descent.", importance: "Single-leg strength without the forward knee shear of regular lunges. Critical for real-world leg strength and glute development." },
-          { id: "d3s3", name: "Seated Leg Curls",                           sets: 4, reps: "12–15",  note: "", importance: "Hamstring isolation. Weak hamstrings are a primary contributor to knee instability. Most people's hamstrings are undertrained relative to quads." },
-          { id: "d3s4", name: "Step-Ups (Low Box 6–8\", bodyweight only)",  sets: 3, reps: "12/leg", note: "⚠️ No added weight until knee stable.", importance: "Functional single-leg strength that directly transfers to stairs, sport, and daily movement. Builds VMO eccentrically." },
-          { id: "d3s5", name: "Standing Calf Raises",                       sets: 3, reps: "15–20",  note: "", importance: "Calves control ankle dorsiflexion. Tight calves force compensatory knee valgus on squat patterns." },
+          { id: "d3s2", name: "Romanian Deadlift (Dumbbell)",               sets: 3, reps: "10–12", note: "Hinge at hips, soft knee. Feel hamstring stretch.", importance: "Hamstrings are massively undertrained in most leg programs. RDL hits them through a full stretch — the most effective range for growth. Also protects the knee by strengthening the opposing muscle group." },
+          { id: "d3s3", name: "Reverse Lunges (knee-safe swap)",            sets: 3, reps: "10/leg", note: "⚠️ Step BACK not forward. Controlled descent.", importance: "Single-leg strength without the forward knee shear of regular lunges. Critical for real-world leg strength and glute development." },
+          { id: "d3s4", name: "Seated Leg Curls",                           sets: 4, reps: "12–15",  note: "", importance: "Hamstring isolation. Weak hamstrings are a primary contributor to knee instability. Most people's hamstrings are undertrained relative to quads." },
+          { id: "d3s5", name: "Step-Ups (Low Box 6–8\", bodyweight only)",  sets: 3, reps: "12/leg", note: "⚠️ No added weight until knee stable.", importance: "Functional single-leg strength that directly transfers to stairs, sport, and daily movement. Builds VMO eccentrically." },
+          { id: "d3s6", name: "Standing Calf Raises",                       sets: 3, reps: "15–20",  note: "", importance: "Calves control ankle dorsiflexion. Tight calves force compensatory knee valgus on squat patterns." },
         ],
       },
       {
@@ -136,6 +152,14 @@ export const WORKOUT_PLAN = [
           { id: "d3cd1", name: "Cycling / Rowing", sets: 1, reps: "30 min", note: "HR 110–130 bpm. Cycling preferred.", importance: "Cycling keeps the knee joint moving through low-load range — actually therapeutic post-leg day rather than stressful." },
         ],
       },
+    ],
+    homeAlternatives: [
+      { id: "d3h1", name: "Glute Bridge + TKE Band (Rehab)",        sets: 3, reps: "15 each",  note: "Always do rehab first — gym or home.",  isRehab: true, importance: "Rehab is non-negotiable. You have everything you need for it at home." },
+      { id: "d3h2", name: "Kettlebell Romanian Deadlift",            sets: 4, reps: "12–15",    note: "Hinge deep, feel the hamstring stretch.", importance: "Kettlebell RDL is actually excellent — the shape lets you hinge deeper than a barbell for more hamstring range." },
+      { id: "d3h3", name: "Bulgarian Split Squat (bodyweight)",      sets: 3, reps: "10/leg",   note: "Rear foot elevated on chair or sofa.",    importance: "The hardest bodyweight leg exercise. Single leg, glute-dominant, knee-friendly if controlled. Brutal without any weight." },
+      { id: "d3h4", name: "Resistance Band Glute Kickbacks",         sets: 3, reps: "15/side",  note: "On all fours, band around ankle.",         importance: "Glute isolation at home. Hits glute max through full extension — same pattern as cable kickbacks." },
+      { id: "d3h5", name: "Calf Raises (Single Leg, on a step)",     sets: 3, reps: "15–20/leg", note: "Use a stair for full range.",             importance: "Single leg calf raise is harder than bilateral. A stair gives you the bottom stretch that floor raises can't." },
+      { id: "d3h6", name: "Bodyweight Reverse Lunges",               sets: 3, reps: "12/leg",   note: "Slow descent, drive through heel.",        importance: "Knee-safe lunge pattern with zero equipment. Keeps the single-leg volume up on home days." },
     ],
   },
 
@@ -175,9 +199,12 @@ export const WORKOUT_PLAN = [
       {
         title: "Optional Cardio",
         exercises: [
-          { id: "d4cd1", name: "Light Walk", sets: 1, reps: "20 min", note: "Easy pace. Just move.", importance: "Blood flow without loading. Accelerates muscle repair through increased circulation. The Japanese call this 'active recovery' for a reason." },
+          { id: "d4cd1", name: "Light Walk", sets: 1, reps: "20 min", note: "Easy pace. Just move.", importance: "Blood flow without loading. Accelerates muscle repair through increased circulation." },
         ],
       },
+    ],
+    homeAlternatives: [
+      { id: "d4h1", name: "Full Rehab + Mobility Flow", sets: 1, reps: "30–40 min", note: "Do all rehab + yoga. This day is 100% doable at home.", isRehab: true, importance: "Recovery day is actually better at home — no commute, no rushing. Mat, foam roller, bands. That's all you need." },
     ],
   },
 
@@ -195,10 +222,11 @@ export const WORKOUT_PLAN = [
         title: "Strength",
         exercises: [
           { id: "d5s1", name: "Flat Dumbbell Bench Press",          sets: 4, reps: "8–10",  note: "", importance: "Dumbbell variation hits each side independently — no dominant side compensating. Greater range of motion than barbell or machine." },
-          { id: "d5s2", name: "Landmine Press",                     sets: 4, reps: "10",    note: "", importance: "Shoulder-friendly pressing angle that trains the upper chest and anterior delt simultaneously. Hard to replicate with other movements." },
+          { id: "d5s2", name: "Cable Chest Flys (Flat or Low)",     sets: 4, reps: "12–15", note: "Set cables at low-to-mid height. Slight forward lean.", importance: "Cable flys keep constant tension through the entire range — peak contraction at the centre where dumbbells go slack. Superior for chest isolation and doesn't load the shoulder joint like a press." },
           { id: "d5s3", name: "Front Plate Raises",                 sets: 3, reps: "12–15", note: "", importance: "Anterior delt isolation in the scapular plane. Balances the lateral and rear delt work done elsewhere." },
           { id: "d5s4", name: "Arnold Press",                       sets: 3, reps: "10–12", note: "", importance: "Full shoulder rotation through the press — hits all three delt heads in one movement. The rotation component is unique." },
           { id: "d5s5", name: "Overhead Tricep Dumbbell Extension", sets: 3, reps: "12–15", note: "", importance: "Long head of tricep is only fully stretched overhead. This is the head that gives arms that full horseshoe shape." },
+          { id: "d5s6", name: "Cable Tricep Pushdowns (Bar)",       sets: 3, reps: "12–15", note: "Straight bar. Elbows tucked.", importance: "Second tricep exercise on volume push day. Bar attachment shifts emphasis to lateral head vs rope. Hitting two heads across both tricep exercises maximises overall tricep development." },
         ],
       },
       {
@@ -222,13 +250,20 @@ export const WORKOUT_PLAN = [
         ],
       },
     ],
+    homeAlternatives: [
+      { id: "d5h1", name: "Push-Up Variations (Wide + Diamond + Pike)", sets: 4, reps: "15 each", note: "All 3 back to back as a circuit.", importance: "Three push-up angles cover chest, shoulders, and triceps — same muscles as the gym session. Circuit format keeps intensity high." },
+      { id: "d5h2", name: "Resistance Band Chest Flys",                 sets: 3, reps: "15–20",   note: "Anchor at chest height behind you, fly forward.", importance: "Band fly gives constant tension like cables. Same movement pattern, same chest stimulus." },
+      { id: "d5h3", name: "Resistance Band Arnold Press",               sets: 3, reps: "12–15",   note: "Stand on band, press and rotate.",                importance: "Arnold press works perfectly with bands. The rotation component is what matters — band or dumbbell doesn't change that." },
+      { id: "d5h4", name: "Resistance Band Overhead Tricep Extension",  sets: 3, reps: "15",      note: "Anchor low, face away, extend overhead.",         importance: "Long head tricep hit at home. Exact same stretch position as dumbbell version." },
+      { id: "d5h5", name: "Tricep Dips (on chair)",                     sets: 3, reps: "15–20",   note: "Straight legs for more difficulty.",              importance: "Bodyweight tricep dips are brutally effective. Lateral and medial head emphasis — complements the overhead extension." },
+    ],
   },
 
   {
     id: "day6",
     label: "Day 6",
     name: "Pull Vol.",
-    focus: "Back · Biceps",
+    focus: "Back · Biceps · Forearms",
     color: "#EC4899",
     icon: "💎",
     type: "strength",
@@ -242,6 +277,7 @@ export const WORKOUT_PLAN = [
           { id: "d6s3", name: "Cable Rear Delt Flys",         sets: 3, reps: "12–15",      note: "", importance: "Rear delts are chronically undertrained. This is your second hit this week — necessary for the muscle group to actually grow." },
           { id: "d6s4", name: "Incline Dumbbell Curls",       sets: 3, reps: "12–15",      note: "", importance: "Incline position stretches the long head of bicep at the bottom. The stretch position is where most growth stimulus comes from." },
           { id: "d6s5", name: "Spider Curls / Cable Curls",   sets: 3, reps: "12–15",      note: "", importance: "Peak contraction focus. Cable keeps tension at the top — the position where dumbbells go slack. Alternating these maximises both ends of the range." },
+          { id: "d6s6", name: "Reverse Curls (EZ Bar)",       sets: 3, reps: "12–15",      note: "Overhand grip. Control the descent.", importance: "Reverse curls directly train the brachioradialis and forearm extensors — the forearm muscles most visible from the front. Also hits the brachialis which adds thickness under the bicep. Nothing else in this plan trains this." },
         ],
       },
       {
@@ -255,7 +291,7 @@ export const WORKOUT_PLAN = [
       {
         title: "Core",
         exercises: [
-          { id: "d6c1", name: "Ab Wheel Rollouts", sets: 3, reps: "10–12", note: "", importance: "The hardest anti-extension core exercise in your program. Builds the deep abdominal wall strength that protects the spine under heavy loads." },
+          { id: "d6c1", name: "Ab Wheel Rollouts", sets: 3, reps: "10–12", note: "", importance: "The hardest anti-extension core exercise in the plan. Second hit this week — core needs frequency just like any other muscle." },
         ],
       },
       {
@@ -264,6 +300,14 @@ export const WORKOUT_PLAN = [
           { id: "d6cd1", name: "Incline Treadmill / Elliptical", sets: 1, reps: "30 min", note: "HR 110–130 bpm.", importance: "Elliptical is zero-impact — your best cardio option when legs are accumulated fatigue after a full week. Smart choice for session 6." },
         ],
       },
+    ],
+    homeAlternatives: [
+      { id: "d6h1", name: "Resistance Band Rows (Door Anchor)",    sets: 4, reps: "12–15",   note: "Anchor at waist height. Single arm for more range.", importance: "Mid-back and rhomboid hit at home. Full pull pattern with band." },
+      { id: "d6h2", name: "Resistance Band Rear Delt Flys",        sets: 3, reps: "15–20",   note: "Anchor at face height.",                             importance: "Rear delts don't need a gym. Band gives the same resistance curve as cables for this movement." },
+      { id: "d6h3", name: "Resistance Band Bicep Curls",           sets: 3, reps: "15–20",   note: "Supinate at top.",                                   importance: "Standard bicep curl pattern. Band increases tension at top — where dumbbells get easy." },
+      { id: "d6h4", name: "Resistance Band Hammer Curls",          sets: 3, reps: "15–20",   note: "Neutral grip throughout.",                           importance: "Brachialis hit. Hammer curl with band is as effective as with dumbbells for this muscle." },
+      { id: "d6h5", name: "Resistance Band Reverse Curls",         sets: 3, reps: "15",      note: "Overhand grip, stand on band.",                      importance: "Forearm and brachioradialis training at home. Band works perfectly — the resistance is pure tension, grip is everything." },
+      { id: "d6h6", name: "Kettlebell Shrugs",                     sets: 3, reps: "12–15",   note: "Hold at top 1 sec.",                                 importance: "Trap training requires no gym. Kettlebell shrug is identical to dumbbell." },
     ],
   },
 

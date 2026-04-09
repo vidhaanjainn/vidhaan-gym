@@ -351,9 +351,16 @@ export default function DayView({
   sportsForDate,
   onToggleSport,
   dateStr,
+  isHome,
+  onToggleHome,
 }) {
-  const allIds   = day.sections.flatMap(s => s.exercises.map(e => e.id));
-  const rehabIds = day.sections.flatMap(s => s.exercises.filter(e => e.isRehab).map(e => e.id));
+  // If home mode, use homeAlternatives if available; else fall back to gym sections
+  const activeSections = isHome && day.homeAlternatives
+    ? [{ title: "🏠 Home Workout", exercises: day.homeAlternatives }]
+    : day.sections;
+
+  const allIds   = activeSections.flatMap(s => s.exercises.map(e => e.id));
+  const rehabIds = activeSections.flatMap(s => s.exercises.filter(e => e.isRehab).map(e => e.id));
   const doneCount = allIds.filter(id => completedExercises[id]).length;
   const pct = allIds.length > 0 ? Math.round((doneCount / allIds.length) * 100) : 0;
   const rehabDone = rehabIds.filter(id => completedExercises[id]).length;
@@ -366,7 +373,7 @@ export default function DayView({
   const [insight, setInsight]               = useState(session?.insight || null);
   const [expanded, setExpanded]             = useState(() => {
     const init = {};
-    day.sections.forEach((_, i) => { init[i] = true; });
+    activeSections.forEach((_, i) => { init[i] = true; });
     return init;
   });
 
@@ -487,8 +494,38 @@ export default function DayView({
         )}
       </div>
 
+      {/* Home / Gym toggle */}
+      {day.homeAlternatives && day.type !== "rest" && day.type !== "recovery" && !isFinished && (
+        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+          <button
+            onClick={() => onToggleHome && onToggleHome(false)}
+            style={{
+              flex: 1, padding: "9px 0", borderRadius: 10, border: "none",
+              cursor: "pointer", fontSize: 12, fontWeight: 700,
+              fontFamily: "inherit",
+              background: !isHome ? day.color : "#111118",
+              color: !isHome ? "#000" : "#4B5563",
+              transition: "all 0.2s",
+            }}>
+            🏋️ Gym
+          </button>
+          <button
+            onClick={() => onToggleHome && onToggleHome(true)}
+            style={{
+              flex: 1, padding: "9px 0", borderRadius: 10, border: "none",
+              cursor: "pointer", fontSize: 12, fontWeight: 700,
+              fontFamily: "inherit",
+              background: isHome ? "#3B82F6" : "#111118",
+              color: isHome ? "#fff" : "#4B5563",
+              transition: "all 0.2s",
+            }}>
+            🏠 Home
+          </button>
+        </div>
+      )}
+
       {/* Sections */}
-      {day.sections.map((section, si) => {
+      {activeSections.map((section, si) => {
         const isOpen  = expanded[si] !== false;
         const isRehab = section.exercises.some(e => e.isRehab);
         const secDone = section.exercises.filter(e => completedExercises[e.id]).length;
