@@ -463,7 +463,33 @@ export default function DayView({
               {isFinished && <span style={{ fontSize: 13, background: "#4ade8022", color: "#4ade80", padding: "2px 8px", borderRadius: 20, marginLeft: 10, fontFamily: "'DM Sans', sans-serif", fontWeight: 700 }}>Done ✓</span>}
             </div>
             <div style={{ fontSize: 13, color: "#9CA3AF", marginTop: 3 }}>{day.focus}</div>
-            <div style={{ fontSize: 12, color: "#6B7280", marginTop: 4 }}>⏱ {day.duration}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+              <span style={{ fontSize: 12, color: "#6B7280" }}>⏱ {day.duration}</span>
+              {day.homeAlternatives && day.type !== "rest" && day.type !== "recovery" && !isFinished && (
+                <div
+                  onClick={(e) => { e.stopPropagation(); onToggleHome && onToggleHome(!isHome); }}
+                  onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); onToggleHome && onToggleHome(!isHome); }}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 0,
+                    background: "#1a1a26", border: "1px solid #2d2d40",
+                    borderRadius: 20, padding: "1px", cursor: "pointer",
+                    userSelect: "none",
+                  }}>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 16,
+                    background: !isHome ? day.color : "transparent",
+                    color: !isHome ? "#000" : "#4B5563",
+                    transition: "all 0.15s",
+                  }}>Gym</span>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 16,
+                    background: isHome ? "#3B82F6" : "transparent",
+                    color: isHome ? "#fff" : "#4B5563",
+                    transition: "all 0.15s",
+                  }}>Home</span>
+                </div>
+              )}
+            </div>
           </div>
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: 32, fontWeight: 800, color: day.color, fontFamily: "'Syne', sans-serif", lineHeight: 1 }}>
@@ -494,35 +520,7 @@ export default function DayView({
         )}
       </div>
 
-      {/* Home / Gym toggle */}
-      {day.homeAlternatives && day.type !== "rest" && day.type !== "recovery" && !isFinished && (
-        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-          <button
-            onClick={() => onToggleHome && onToggleHome(false)}
-            style={{
-              flex: 1, padding: "9px 0", borderRadius: 10, border: "none",
-              cursor: "pointer", fontSize: 12, fontWeight: 700,
-              fontFamily: "inherit",
-              background: !isHome ? day.color : "#111118",
-              color: !isHome ? "#000" : "#4B5563",
-              transition: "all 0.2s",
-            }}>
-            🏋️ Gym
-          </button>
-          <button
-            onClick={() => onToggleHome && onToggleHome(true)}
-            style={{
-              flex: 1, padding: "9px 0", borderRadius: 10, border: "none",
-              cursor: "pointer", fontSize: 12, fontWeight: 700,
-              fontFamily: "inherit",
-              background: isHome ? "#3B82F6" : "#111118",
-              color: isHome ? "#fff" : "#4B5563",
-              transition: "all 0.2s",
-            }}>
-            🏠 Home
-          </button>
-        </div>
-      )}
+
 
       {/* Sections */}
       {activeSections.map((section, si) => {
