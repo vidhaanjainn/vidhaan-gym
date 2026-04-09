@@ -59,6 +59,7 @@ export default function App() {
   const [motivationIdx] = useState(() => Math.floor(Math.random() * MOTIVATIONAL_MESSAGES.length));
   const [weekOrder,    setWeekOrder]    = useState(null);
   const [reorderMode,  setReorderMode]  = useState(false);
+  const [homeModes,    setHomeModes]    = useState({});
 
   const todayGymIndex = getTodayGymDayIndex();
   const todayWorkout  = WORKOUT_PLAN[todayGymIndex];
@@ -93,9 +94,14 @@ export default function App() {
     setShowReport(false);
   };
 
-  // Load week order on mount / week change
   useEffect(() => {
     setWeekOrder(getWeekOrder(currentWeekKey));
+    const modes = {};
+    WORKOUT_PLAN.forEach(d => {
+      try { modes[`${currentWeekKey}-${d.id}`] = localStorage.getItem(`gym:home-${currentWeekKey}-${d.id}`) === "1"; }
+      catch { modes[`${currentWeekKey}-${d.id}`] = false; }
+    });
+    setHomeModes(modes);
   }, [currentWeekKey]);
 
   // Ordered plan for current week
@@ -124,7 +130,8 @@ export default function App() {
     const session     = getSession(targetWeek, day.id);
     const comment     = getComment(targetDate);
     const sportsForDate = getSportsForDate(targetDate);
-    const isHome      = getHomeMode(targetWeek, day.id);
+    const homeModeKey = `${targetWeek}-${day.id}`;
+    const isHome      = homeModes[homeModeKey] || false;
 
     return (
       <DayView
@@ -146,6 +153,7 @@ export default function App() {
         isHome={isHome}
         onToggleHome={(val) => {
           setHomeMode(targetWeek, day.id, val);
+          setHomeModes(prev => ({ ...prev, [homeModeKey]: val }));
         }}
       />
     );
@@ -320,7 +328,7 @@ export default function App() {
               const isToday     = i === todayGymIndex;
               const session     = getSession(currentWeekKey, day.id);
               const isFinished  = session.state === "finished";
-              const isHome      = getHomeMode(currentWeekKey, day.id);
+              const isHome      = homeModes[`${currentWeekKey}-${day.id}`] || false;
 
               const moveDay = (fromIdx, toIdx) => {
                 if (toIdx < 0 || toIdx >= orderedPlan.length) return;

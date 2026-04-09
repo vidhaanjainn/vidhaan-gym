@@ -377,6 +377,13 @@ export default function DayView({
     return init;
   });
 
+  // Reset expanded sections when switching gym/home
+  useEffect(() => {
+    const init = {};
+    activeSections.forEach((_, i) => { init[i] = true; });
+    setExpanded(init);
+  }, [isHome]); // eslint-disable-line
+
   const targetDate = dateStr || getTodayStr();
   const isToday    = targetDate === getTodayStr();
 
