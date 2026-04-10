@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { SPORTS_ACTIVITIES } from "../data/workouts";
 import { getTodayStr } from "../hooks/useStorage";
 import { getSessionInsight } from "../services/gemini";
