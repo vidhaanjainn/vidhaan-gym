@@ -354,10 +354,14 @@ export default function DayView({
   isHome,
   onToggleHome,
 }) {
-  // If home mode, use homeAlternatives if available; else fall back to gym sections
-  const activeSections = isHome && day.homeAlternatives
-    ? [{ title: "🏠 Home Workout", exercises: day.homeAlternatives }]
-    : day.sections;
+  // Rehab always shows in both home and gym mode
+  const rehabSections = day.sections
+    .map(s => ({ ...s, exercises: s.exercises.filter(e => e.isRehab) }))
+    .filter(s => s.exercises.length > 0);
+  const workoutSections = isHome && day.homeAlternatives
+    ? [{ title: "Home Workout", exercises: day.homeAlternatives.filter(e => !e.isRehab) }]
+    : day.sections.map(s => ({ ...s, exercises: s.exercises.filter(e => !e.isRehab) }));
+  const activeSections = [...workoutSections, ...rehabSections];
 
   const allIds   = activeSections.flatMap(s => s.exercises.map(e => e.id));
   const rehabIds = activeSections.flatMap(s => s.exercises.filter(e => e.isRehab).map(e => e.id));
